@@ -34,9 +34,9 @@ const Window: React.FC<WindowProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isMobile) return; // Disable dragging on mobile
-    if (e.button !== 0) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
     onFocus();
     setIsDragging(true);
     const rect = windowRef.current?.getBoundingClientRect();
@@ -102,7 +102,7 @@ const Window: React.FC<WindowProps> = ({
         borderRightColor: '#404040',
         borderBottomColor: '#404040'
       }}
-      onMouseDown={onFocus}
+      onPointerDown={onFocus}
     >
       {/* Title Bar */}
       <div
@@ -110,7 +110,7 @@ const Window: React.FC<WindowProps> = ({
           ${isMobile ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'}
           ${isFocused ? 'bg-[#000080]' : 'bg-[#808080]'}
         `}
-        onMouseDown={handleMouseDown}
+        onPointerDown={handlePointerDown}
       >
         <div className="flex items-center gap-1.5">
           {icon && <div className="w-5 h-5 flex items-center justify-center">{icon}</div>}

@@ -22,6 +22,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [score, setScore] = useState(0);
     const [gameOver, setGameOver] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
 
     // Game Configuration
     const WIDTH = 640;
@@ -52,6 +53,17 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
 
     const isFocusedRef = useRef(isFocused);
     useEffect(() => { isFocusedRef.current = isFocused; }, [isFocused]);
+
+    useEffect(() => {
+        const updateIsMobile = (): void => {
+            setIsMobile(window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768);
+        };
+
+        updateIsMobile();
+        window.addEventListener('resize', updateIsMobile);
+
+        return () => window.removeEventListener('resize', updateIsMobile);
+    }, []);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -99,23 +111,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             if (!isFocusedRef.current) return;
             if (e.code === 'Space' || e.code === 'ArrowUp') {
                 e.preventDefault();
-                const s = gameState.current;
-                if (s.player.dead && gameOver) {
-                    resetGame();
-                } else if (s.player.onGround && !s.player.dead) {
-                    s.player.dy = JUMP_FORCE;
-                    s.player.onGround = false;
-                    for (let k = 0; k < 8; k++) {
-                        s.particles.push({
-                            x: PLAYER_X + 15,
-                            y: s.player.y + 30,
-                            vx: (Math.random() - 0.5) * 6,
-                            vy: Math.random() * -3,
-                            life: 30,
-                            color: '#00ffff'
-                        });
-                    }
-                }
+                jumpOrReset();
             }
             if (e.code === 'Enter' && gameOver) resetGame();
         };
@@ -135,6 +131,41 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             setScore(0);
             setGameOver(false);
         };
+
+        const jumpOrReset = () => {
+            const s = gameState.current;
+            if (s.player.dead && gameOver) {
+                resetGame();
+                return;
+            }
+
+            if (s.player.onGround && !s.player.dead) {
+                s.player.dy = JUMP_FORCE;
+                s.player.onGround = false;
+                for (let k = 0; k < 8; k++) {
+                    s.particles.push({
+                        x: PLAYER_X + 15,
+                        y: s.player.y + 30,
+                        vx: (Math.random() - 0.5) * 6,
+                        vy: Math.random() * -3,
+                        life: 30,
+                        color: '#00ffff'
+                    });
+                }
+            }
+        };
+
+        const handlePointerDown = (event: PointerEvent) => {
+            event.preventDefault();
+
+            if (!isFocusedRef.current) {
+                onFocus();
+            }
+
+            jumpOrReset();
+        };
+
+        canvas.addEventListener('pointerdown', handlePointerDown);
 
         const update = () => {
             const s = gameState.current;
@@ -411,9 +442,10 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
 
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
+            canvas.removeEventListener('pointerdown', handlePointerDown);
             cancelAnimationFrame(frameId);
         };
-    }, [gameOver]);
+    }, [gameOver, onFocus]);
 
     return (
         <Window
@@ -429,17 +461,18 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             initialY={100}
             icon={<div className="bg-yellow-400 w-full h-full border border-black" />}
         >
-            <div className="bg-black p-1 border-2 border-gray-600 border-inset overflow-x-auto">
+            <div className="bg-black p-1 border-2 border-gray-600 border-inset overflow-hidden">
                 <canvas
                     ref={canvasRef}
                     width={WIDTH}
                     height={HEIGHT}
-                    className="block bg-[#050505] cursor-pointer"
+                    className="block w-full h-auto max-w-full bg-[#050505] cursor-pointer touch-manipulation"
+                    style={{ imageRendering: 'pixelated' }}
                 />
             </div>
             <div className="flex justify-between px-2 py-1 bg-[#c0c0c0] text-sm border-t border-gray-400">
                 <span>Score: {score}</span>
-                <span>Controls: SPACE to Jump</span>
+                <span>{isMobile ? 'Controls: Tap to Jump' : 'Controls: SPACE to Jump'}</span>
             </div>
         </Window>
     );
