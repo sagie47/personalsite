@@ -445,7 +445,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             canvas.removeEventListener('pointerdown', handlePointerDown);
             cancelAnimationFrame(frameId);
         };
-    }, [gameOver, onFocus]);
+    }, [gameOver]);
 
     return (
         <Window
