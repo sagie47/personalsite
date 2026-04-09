@@ -18,6 +18,39 @@ interface Entity {
     collected?: boolean;
 }
 
+interface RenderSettings {
+    fps: number;
+    gridSpacing: number;
+    drawGrid: boolean;
+    useShadows: boolean;
+    jumpParticles: number;
+    deathParticles: number;
+    maxRenderedParticles: number;
+    cameraShake: number;
+}
+
+const DESKTOP_RENDER_SETTINGS: RenderSettings = {
+    fps: 60,
+    gridSpacing: 40,
+    drawGrid: true,
+    useShadows: true,
+    jumpParticles: 8,
+    deathParticles: 30,
+    maxRenderedParticles: 30,
+    cameraShake: 20
+};
+
+const MOBILE_RENDER_SETTINGS: RenderSettings = {
+    fps: 30,
+    gridSpacing: 80,
+    drawGrid: false,
+    useShadows: false,
+    jumpParticles: 4,
+    deathParticles: 12,
+    maxRenderedParticles: 12,
+    cameraShake: 12
+};
+
 const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocused, isClosing = false }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [score, setScore] = useState(0);
@@ -52,7 +85,11 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
     });
 
     const isFocusedRef = useRef(isFocused);
+    const isMobileRef = useRef(false);
+    const jumpActionRef = useRef<(() => void) | null>(null);
+    const lastFrameTimeRef = useRef(0);
     useEffect(() => { isFocusedRef.current = isFocused; }, [isFocused]);
+    useEffect(() => { isMobileRef.current = isMobile; }, [isMobile]);
 
     useEffect(() => {
         const updateIsMobile = (): void => {
@@ -72,6 +109,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
         if (!ctx) return;
 
         let frameId: number;
+        let isMounted = true;
 
         const spawnPattern = (xOffset: number) => {
             const patterns = [
@@ -107,16 +145,11 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             return pick(xOffset);
         };
 
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (!isFocusedRef.current) return;
-            if (e.code === 'Space' || e.code === 'ArrowUp') {
-                e.preventDefault();
-                jumpOrReset();
-            }
-            if (e.code === 'Enter' && gameOver) resetGame();
-        };
+        const getRenderSettings = (): RenderSettings => (
+            isMobileRef.current ? MOBILE_RENDER_SETTINGS : DESKTOP_RENDER_SETTINGS
+        );
 
-        window.addEventListener('keydown', handleKeyDown);
+        const clampStep = (delta: number) => Math.min(delta, 3);
 
         const resetGame = () => {
             const s = gameState.current;
@@ -130,10 +163,13 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             s.score = 0;
             setScore(0);
             setGameOver(false);
+            lastFrameTimeRef.current = 0;
         };
 
         const jumpOrReset = () => {
             const s = gameState.current;
+            const renderSettings = getRenderSettings();
+
             if (s.player.dead && gameOver) {
                 resetGame();
                 return;
@@ -142,7 +178,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             if (s.player.onGround && !s.player.dead) {
                 s.player.dy = JUMP_FORCE;
                 s.player.onGround = false;
-                for (let k = 0; k < 8; k++) {
+                for (let k = 0; k < renderSettings.jumpParticles; k++) {
                     s.particles.push({
                         x: PLAYER_X + 15,
                         y: s.player.y + 30,
@@ -154,6 +190,18 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
                 }
             }
         };
+
+        jumpActionRef.current = jumpOrReset;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!isFocusedRef.current) return;
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                e.preventDefault();
+                jumpOrReset();
+            }
+            if (e.code === 'Enter' && gameOver) resetGame();
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
 
         const handlePointerDown = (event: PointerEvent) => {
             event.preventDefault();
@@ -167,16 +215,17 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
 
         canvas.addEventListener('pointerdown', handlePointerDown);
 
-        const update = () => {
+        const update = (delta: number) => {
             const s = gameState.current;
             if (s.player.dead) return;
+            const step = clampStep(delta);
 
-            s.distance += s.speed;
+            s.distance += s.speed * step;
             s.speed = Math.min(14, 6 + s.distance / 5000);
 
             // Player Physics
-            s.player.dy += GRAVITY;
-            s.player.y += s.player.dy;
+            s.player.dy += GRAVITY * step;
+            s.player.y += s.player.dy * step;
 
             // Ground Collision
             if (s.player.y >= GROUND_Y - 30) {
@@ -187,10 +236,10 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
                 if (rot < 0.1 || rot > (Math.PI / 2 - 0.1)) {
                     s.player.rotation = Math.round(s.player.rotation / (Math.PI / 2)) * (Math.PI / 2);
                 } else {
-                    s.player.rotation += 0.2;
+                    s.player.rotation += 0.2 * step;
                 }
             } else {
-                s.player.rotation += 0.2;
+                s.player.rotation += 0.2 * step;
             }
 
             // Generate Level
@@ -198,7 +247,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
                 s.lastSpawnX = spawnPattern(s.lastSpawnX + 100);
             }
 
-            s.lastSpawnX -= s.speed;
+            s.lastSpawnX -= s.speed * step;
 
             if (s.lastSpawnX < WIDTH + 200) {
                 s.lastSpawnX = spawnPattern(WIDTH + 50);
@@ -206,7 +255,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
 
             for (let i = s.obstacles.length - 1; i >= 0; i--) {
                 const ob = s.obstacles[i];
-                ob.x -= s.speed;
+                ob.x -= s.speed * step;
 
                 const pRect = { x: PLAYER_X + 6, y: s.player.y + 6, w: 18, h: 18 };
                 const oRect = { x: ob.x, y: ob.y, w: ob.w, h: ob.h };
@@ -223,7 +272,8 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
                             s.score += 50;
                             setScore(s.score);
                             // Coin particles
-                            for (let k = 0; k < 5; k++) {
+                            const renderSettings = getRenderSettings();
+                            for (let k = 0; k < Math.max(3, Math.floor(renderSettings.jumpParticles / 2)); k++) {
                                 s.particles.push({
                                     x: ob.x + ob.w / 2,
                                     y: ob.y + ob.h / 2,
@@ -265,21 +315,22 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
 
             for (let i = s.particles.length - 1; i >= 0; i--) {
                 const p = s.particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life--;
+                p.x += p.vx * step;
+                p.y += p.vy * step;
+                p.life -= step;
                 if (p.life <= 0) s.particles.splice(i, 1);
             }
 
-            if (s.cameraShake > 0) s.cameraShake *= 0.9;
+            if (s.cameraShake > 0) s.cameraShake *= Math.pow(0.9, step);
         };
 
         const die = () => {
             const s = gameState.current;
+            const renderSettings = getRenderSettings();
             s.player.dead = true;
             setGameOver(true);
-            s.cameraShake = 20;
-            for (let k = 0; k < 30; k++) {
+            s.cameraShake = renderSettings.cameraShake;
+            for (let k = 0; k < renderSettings.deathParticles; k++) {
                 s.particles.push({
                     x: PLAYER_X + 15,
                     y: s.player.y + 15,
@@ -293,6 +344,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
 
         const draw = () => {
             const s = gameState.current;
+            const renderSettings = getRenderSettings();
 
             const shakeX = (Math.random() - 0.5) * s.cameraShake;
             const shakeY = (Math.random() - 0.5) * s.cameraShake;
@@ -305,24 +357,26 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             ctx.fillRect(-20, -20, WIDTH + 40, HEIGHT + 40);
 
             // Retro Grid Background
-            ctx.save();
-            ctx.strokeStyle = 'rgba(255, 31, 173, 0.15)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            const gridX = -(s.distance * 0.5) % 40;
-            for (let x = gridX; x < WIDTH; x += 40) {
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, HEIGHT);
+            if (renderSettings.drawGrid) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(255, 31, 173, 0.15)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                const gridX = -(s.distance * 0.5) % renderSettings.gridSpacing;
+                for (let x = gridX; x < WIDTH; x += renderSettings.gridSpacing) {
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, HEIGHT);
+                }
+                for (let y = 0; y < HEIGHT; y += renderSettings.gridSpacing) {
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(WIDTH, y);
+                }
+                ctx.stroke();
+                ctx.restore();
             }
-            for (let y = 0; y < HEIGHT; y += 40) {
-                ctx.moveTo(0, y);
-                ctx.lineTo(WIDTH, y);
-            }
-            ctx.stroke();
-            ctx.restore();
 
             // Floor with Neon Glow
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = renderSettings.useShadows ? 10 : 0;
             ctx.shadowColor = '#00ffff';
             ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 2;
@@ -338,7 +392,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             // Obstacles
             for (const ob of s.obstacles) {
                 if (ob.type === 'spike') {
-                    ctx.shadowBlur = 10;
+                    ctx.shadowBlur = renderSettings.useShadows ? 10 : 0;
                     ctx.shadowColor = '#ff3333';
                     ctx.fillStyle = '#ff3333';
                     ctx.beginPath();
@@ -347,7 +401,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
                     ctx.lineTo(ob.x + ob.w, ob.y + ob.h);
                     ctx.fill();
                 } else if (ob.type === 'block') {
-                    ctx.shadowBlur = 10;
+                    ctx.shadowBlur = renderSettings.useShadows ? 10 : 0;
                     ctx.shadowColor = '#33ff33';
                     ctx.fillStyle = '#000';
                     ctx.strokeStyle = '#33ff33';
@@ -355,14 +409,14 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
                     ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
                     ctx.strokeRect(ob.x, ob.y, ob.w, ob.h);
                 } else if (ob.type === 'coin' && !ob.collected) {
-                    ctx.shadowBlur = 15;
+                    ctx.shadowBlur = renderSettings.useShadows ? 15 : 0;
                     ctx.shadowColor = '#ffd700';
                     ctx.fillStyle = '#ffd700';
                     ctx.beginPath();
                     ctx.arc(ob.x + ob.w / 2, ob.y + ob.h / 2, ob.w / 2, 0, Math.PI * 2);
                     ctx.fill();
                 } else if (ob.type === 'platform') {
-                    ctx.shadowBlur = 10;
+                    ctx.shadowBlur = renderSettings.useShadows ? 10 : 0;
                     ctx.shadowColor = '#33ccff';
                     ctx.fillStyle = '#000';
                     ctx.strokeStyle = '#33ccff';
@@ -373,8 +427,12 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             }
 
             // Particles
-            for (const p of s.particles) {
-                ctx.shadowBlur = 5;
+            const particleStartIndex = renderSettings.maxRenderedParticles < s.particles.length
+                ? s.particles.length - renderSettings.maxRenderedParticles
+                : 0;
+            for (let i = particleStartIndex; i < s.particles.length; i++) {
+                const p = s.particles[i];
+                ctx.shadowBlur = renderSettings.useShadows ? 5 : 0;
                 ctx.shadowColor = p.color;
                 ctx.fillStyle = p.color;
                 ctx.globalAlpha = p.life / 30;
@@ -389,7 +447,7 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
                 ctx.save();
                 ctx.translate(PLAYER_X + 15, s.player.y + 15);
                 ctx.rotate(s.player.rotation);
-                ctx.shadowBlur = 20;
+                ctx.shadowBlur = renderSettings.useShadows ? 20 : 0;
                 ctx.shadowColor = '#ff1fad';
                 ctx.fillStyle = '#ff1fad';
                 ctx.fillRect(-15, -15, 30, 30);
@@ -421,7 +479,11 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
                 ctx.fillText("CRASHED", WIDTH / 2, HEIGHT / 2 - 20);
                 ctx.fillStyle = '#fff';
                 ctx.font = '16px Arial';
-                ctx.fillText("Press SPACE to Retry", WIDTH / 2, HEIGHT / 2 + 20);
+                ctx.fillText(
+                    renderSettings.useShadows ? "Press SPACE to Retry" : "Tap the button to retry",
+                    WIDTH / 2,
+                    HEIGHT / 2 + 20
+                );
             } else if (!isFocusedRef.current) {
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
                 ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -432,18 +494,40 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             }
         };
 
-        const loop = () => {
-            update();
+        const loop = (timestamp: number) => {
+            if (!isMounted) return;
+
+            const renderSettings = getRenderSettings();
+            const targetFrame = 1000 / renderSettings.fps;
+
+            if (!lastFrameTimeRef.current) {
+                lastFrameTimeRef.current = timestamp;
+                frameId = requestAnimationFrame(loop);
+                return;
+            }
+
+            const elapsed = timestamp - lastFrameTimeRef.current;
+            if (elapsed < targetFrame) {
+                frameId = requestAnimationFrame(loop);
+                return;
+            }
+
+            lastFrameTimeRef.current = timestamp;
+            const delta = elapsed / (1000 / 60);
+
+            update(delta);
             draw();
             frameId = requestAnimationFrame(loop);
         };
 
-        loop();
+        frameId = requestAnimationFrame(loop);
 
         return () => {
+            isMounted = false;
             window.removeEventListener('keydown', handleKeyDown);
             canvas.removeEventListener('pointerdown', handlePointerDown);
             cancelAnimationFrame(frameId);
+            jumpActionRef.current = null;
         };
     }, [gameOver]);
 
@@ -461,18 +545,37 @@ const PlatformerGame: React.FC<GameProps> = ({ onClose, onFocus, zIndex, isFocus
             initialY={100}
             icon={<div className="bg-yellow-400 w-full h-full border border-black" />}
         >
-            <div className="bg-black p-1 border-2 border-gray-600 border-inset overflow-hidden">
-                <canvas
-                    ref={canvasRef}
-                    width={WIDTH}
-                    height={HEIGHT}
-                    className="block w-full h-auto max-w-full bg-[#050505] cursor-pointer touch-manipulation"
-                    style={{ imageRendering: 'pixelated' }}
-                />
-            </div>
-            <div className="flex justify-between px-2 py-1 bg-[#c0c0c0] text-sm border-t border-gray-400">
-                <span>Score: {score}</span>
-                <span>{isMobile ? 'Controls: Tap to Jump' : 'Controls: SPACE to Jump'}</span>
+            <div className="flex flex-col gap-1 overflow-hidden">
+                <div className="bg-black p-1 border-2 border-gray-600 border-inset overflow-hidden">
+                    <canvas
+                        ref={canvasRef}
+                        width={WIDTH}
+                        height={HEIGHT}
+                        className="block w-full h-auto max-w-full bg-[#050505] cursor-pointer touch-manipulation"
+                        style={{ imageRendering: 'pixelated' }}
+                    />
+                </div>
+                <div className="flex justify-between items-center px-2 py-1 bg-[#c0c0c0] text-sm border-t border-gray-400">
+                    <span>Score: {score}</span>
+                    <span>{isMobile ? 'Tap canvas or button' : 'Controls: SPACE to Jump'}</span>
+                </div>
+                {isMobile && (
+                    <div className="bg-[#c0c0c0] border-t border-white border-b border-gray-600 px-2 py-2">
+                        <button
+                            className="win95-btn w-full min-h-[3rem] px-3 py-3 text-sm font-bold uppercase tracking-wider touch-manipulation"
+                            onPointerDown={(event) => {
+                                event.preventDefault();
+                                onFocus();
+                                jumpActionRef.current?.();
+                            }}
+                        >
+                            {gameOver ? 'Tap to Restart' : 'Tap to Jump'}
+                        </button>
+                        <div className="mt-1 text-[11px] text-center text-gray-700">
+                            Bigger targets, fewer effects, same run.
+                        </div>
+                    </div>
+                )}
             </div>
         </Window>
     );

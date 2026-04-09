@@ -271,10 +271,10 @@ const Terminal: React.FC<TerminalProps> = ({ onClose, onFocus, onOpenApp, zIndex
 
                         {/* Footer / Actions */}
                         <div className="mt-4 border-t-2 border-gray-600 pt-2 flex justify-end">
-                            <button
-                                onClick={() => processCommandRef.current('contact')}
-                                className="group flex items-center gap-2 px-3 py-1 bg-gray-800 border border-gray-500 hover:bg-[#ff1fad] hover:border-[#ff1fad] hover:text-black transition-all"
-                            >
+                        <button
+                            onClick={() => processCommandRef.current('contact')}
+                            className="group touch-manipulation flex items-center gap-2 min-h-11 px-4 py-2 bg-gray-800 border border-gray-500 hover:bg-[#ff1fad] hover:border-[#ff1fad] hover:text-black transition-all"
+                        >
                                 <span>✉️</span>
                                 <span className="uppercase text-xs font-bold tracking-wider">Send_Transmission</span>
                             </button>
@@ -468,7 +468,7 @@ const Terminal: React.FC<TerminalProps> = ({ onClose, onFocus, onOpenApp, zIndex
             icon={<span className="font-bold text-xs">C:\</span>}
         >
             <div
-                className="flex-1 overflow-y-auto p-1 font-mono text-sm leading-5 terminal-scroll bg-black text-[#c0c0c0]"
+            className="flex-1 overflow-y-auto p-1 font-mono text-[15px] sm:text-sm leading-6 terminal-scroll bg-black text-[#c0c0c0]"
                 onClick={handleContainerClick}
                 ref={scrollRef}
             >

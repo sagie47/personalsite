@@ -270,7 +270,7 @@ You are chatting on "LoveLink", a 1990s dating website.
                 </div>
 
                 {/* Menu */}
-                <div className="flex gap-4 px-2 py-1 text-sm border-b border-gray-400 mb-1">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 px-2 py-2 text-sm border-b border-gray-400 mb-1">
                     <span className="underline">F</span>ile
                     <span className="underline">E</span>dit
                     <span className="underline">V</span>iew
@@ -280,16 +280,16 @@ You are chatting on "LoveLink", a 1990s dating website.
                 </div>
 
                 {/* Toolbar */}
-                <div className="flex gap-2 p-1 border-b border-white mb-2 shadow-sm">
-                    <button onClick={handleSendMail} className="flex flex-col items-center justify-center w-12 h-10 border border-gray-500 bg-[#d4d0c8] active:border-inset active:bg-gray-400">
+                <div className="flex flex-wrap gap-2 p-1 border-b border-white mb-2 shadow-sm">
+                    <button onClick={handleSendMail} className="touch-manipulation flex flex-col items-center justify-center w-14 h-12 border border-gray-500 bg-[#d4d0c8] active:border-inset active:bg-gray-400">
                         <span className="text-lg">✉️</span>
                         <span className="text-[9px]">Send</span>
                     </button>
-                    <button className="flex flex-col items-center justify-center w-12 h-10 border border-gray-500 bg-[#d4d0c8]">
+                    <button className="touch-manipulation flex flex-col items-center justify-center w-14 h-12 border border-gray-500 bg-[#d4d0c8]">
                         <span className="text-lg">📎</span>
                         <span className="text-[9px]">Attach</span>
                     </button>
-                    <button className="flex flex-col items-center justify-center w-12 h-10 border border-gray-500 bg-[#d4d0c8]">
+                    <button className="touch-manipulation flex flex-col items-center justify-center w-14 h-12 border border-gray-500 bg-[#d4d0c8]">
                         <span className="text-lg">💾</span>
                         <span className="text-[9px]">Save</span>
                     </button>
@@ -302,13 +302,13 @@ You are chatting on "LoveLink", a 1990s dating website.
                         <p className="text-gray-600 mb-4">Your email has been queued for delivery.</p>
                         <button
                             onClick={() => setMailStatus('idle')}
-                            className="px-4 py-1 bg-[#c0c0c0] border-2 border-white border-b-black border-r-black active:border-t-black active:border-l-black"
+                            className="touch-manipulation min-h-11 px-4 py-2 bg-[#c0c0c0] border-2 border-white border-b-black border-r-black active:border-t-black active:border-l-black"
                         >
                             Write Another
                         </button>
                     </div>
                 ) : (
-                    <div className="flex-1 p-2 flex flex-col gap-2">
+                    <div className="flex-1 p-2 flex flex-col gap-2 overflow-y-auto">
                         <div className="grid grid-cols-[60px_1fr] items-center gap-2">
                             <label className="text-right text-xs">To:</label>
                             <input className="border border-gray-500 px-1 text-sm bg-gray-100" value="Sanj [Webmaster]" disabled />
@@ -316,7 +316,7 @@ You are chatting on "LoveLink", a 1990s dating website.
                         <div className="grid grid-cols-[60px_1fr] items-center gap-2">
                             <label className="text-right text-xs">From:</label>
                             <input
-                                className="border border-gray-500 px-1 text-sm"
+                                className="min-h-11 border border-gray-500 px-2 text-sm"
                                 value={mailForm.from}
                                 onChange={e => setMailForm({ ...mailForm, from: e.target.value })}
                                 placeholder="guest@internet.com"
@@ -325,7 +325,7 @@ You are chatting on "LoveLink", a 1990s dating website.
                         <div className="grid grid-cols-[60px_1fr] items-center gap-2">
                             <label className="text-right text-xs">Subject:</label>
                             <input
-                                className="border border-gray-500 px-1 text-sm"
+                                className="min-h-11 border border-gray-500 px-2 text-sm"
                                 value={mailForm.subject}
                                 onChange={e => setMailForm({ ...mailForm, subject: e.target.value })}
                             />
@@ -333,7 +333,7 @@ You are chatting on "LoveLink", a 1990s dating website.
 
                         <div className="flex-1 mt-2 border border-gray-500 bg-white p-1">
                             <textarea
-                                className="w-full h-full resize-none outline-none font-mono text-sm p-1"
+                                className="w-full h-full resize-none outline-none font-mono text-sm p-2 touch-manipulation"
                                 value={mailForm.message}
                                 onChange={e => setMailForm({ ...mailForm, message: e.target.value })}
                                 placeholder={mailStatus === 'sending' ? 'Sending...' : 'Type your message here...'}
@@ -362,7 +362,7 @@ You are chatting on "LoveLink", a 1990s dating website.
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {datingProfiles.map(profile => (
-                            <div key={profile.id} className="bg-white border-2 border-pink-300 p-2 flex flex-col items-center shadow-md cursor-pointer hover:bg-pink-50" onClick={() => handleProfileClick(profile)}>
+                            <div key={profile.id} className="touch-manipulation bg-white border-2 border-pink-300 p-3 min-h-32 flex flex-col items-center shadow-md cursor-pointer hover:bg-pink-50 active:bg-pink-100" onClick={() => handleProfileClick(profile)}>
                                 <img src={profile.image} alt={profile.name} className="w-16 h-16 bg-gray-200 border border-gray-400 mb-2" />
                                 <div className="font-bold text-blue-800 underline text-sm">{profile.name}</div>
                                 <div className="text-xs text-gray-500">{profile.age} / {profile.location.split(',')[1].trim()}</div>
@@ -379,14 +379,14 @@ You are chatting on "LoveLink", a 1990s dating website.
 
         if (datingView === 'profile' && activeProfile) {
             return (
-                <div className="font-sans bg-[#ffcccc] min-h-full p-6">
-                    <button onClick={() => setDatingView('list')} className="text-blue-700 underline text-sm mb-4">&lt;&lt; Back to Search Results</button>
+                <div className="font-sans bg-[#ffcccc] min-h-full p-4 sm:p-6">
+                    <button onClick={() => setDatingView('list')} className="touch-manipulation min-h-11 px-2 text-blue-700 underline text-sm mb-4">&lt;&lt; Back to Search Results</button>
 
                     <div className="bg-white border-2 border-pink-400 p-4 shadow-lg max-w-lg mx-auto">
-                        <div className="flex gap-4">
+                        <div className="flex flex-col sm:flex-row gap-4">
                             <div className="flex flex-col items-center gap-2">
                                 <img src={activeProfile.image} alt={activeProfile.name} className="w-32 h-32 bg-gray-100 border-2 border-gray-300 shadow-inner" />
-                                <button onClick={handleStartChat} className="w-full bg-red-500 text-white font-bold py-1 px-2 text-sm border-2 border-red-700 active:border-red-300 shadow">
+                                <button onClick={handleStartChat} className="touch-manipulation min-h-11 w-full bg-red-500 text-white font-bold py-2 px-3 text-sm border-2 border-red-700 active:border-red-300 shadow">
                                     Message Me!
                                 </button>
                             </div>
@@ -422,7 +422,7 @@ You are chatting on "LoveLink", a 1990s dating website.
                     {/* Chat Header */}
                     <div className="bg-blue-800 text-white p-2 font-bold flex justify-between items-center text-sm">
                         <span>Instant Message - {activeProfile.name}</span>
-                        <button onClick={() => setDatingView('profile')} className="bg-gray-300 text-black px-1 border border-white text-xs">X</button>
+                        <button onClick={() => setDatingView('profile')} className="touch-manipulation min-h-11 min-w-11 bg-gray-300 text-black px-2 border border-white text-xs">X</button>
                     </div>
 
                     {/* Chat Area */}
@@ -439,13 +439,13 @@ You are chatting on "LoveLink", a 1990s dating website.
                     {/* Input Area */}
                     <form onSubmit={sendChatMessage} className="p-2 pt-0 flex gap-2">
                         <input
-                            className="flex-1 border-2 border-gray-500 p-1 font-mono text-sm"
+                            className="flex-1 min-h-11 border-2 border-gray-500 p-2 font-mono text-sm"
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
                             autoFocus
                             placeholder="Type a message..."
                         />
-                        <button type="submit" className="bg-[#c0c0c0] border-2 border-white border-b-black border-r-black px-4 font-bold active:border-t-black active:border-l-black active:border-r-white active:border-b-white">
+                        <button type="submit" className="touch-manipulation min-h-11 bg-[#c0c0c0] border-2 border-white border-b-black border-r-black px-4 font-bold active:border-t-black active:border-l-black active:border-r-white active:border-b-white">
                             Send
                         </button>
                     </form>
@@ -468,7 +468,7 @@ You are chatting on "LoveLink", a 1990s dating website.
 
         if (currentPath === 'projects') {
             return (
-                <div className="p-6 font-serif bg-white min-h-full">
+                <div className="p-4 sm:p-6 font-serif bg-white min-h-full">
                     <div className="border-b-4 border-gray-800 mb-6 pb-2">
                         <h1 className="text-4xl font-bold text-gray-800">My Projects</h1>
                         <p className="text-gray-600 mt-1">A directory of digital artifacts.</p>
@@ -504,7 +504,7 @@ You are chatting on "LoveLink", a 1990s dating website.
                     </div>
 
                     <div className="mt-8 text-center">
-                        <button onClick={() => navigate('home')} className="text-blue-600 underline">&lt; Return to Home</button>
+                        <button onClick={() => navigate('home')} className="touch-manipulation min-h-11 px-3 text-blue-600 underline">&lt; Return to Home</button>
                     </div>
                 </div>
             );
@@ -512,7 +512,7 @@ You are chatting on "LoveLink", a 1990s dating website.
 
         if (currentPath === 'home') {
             return (
-                <div className="p-6 font-serif bg-white min-h-full">
+                <div className="p-4 sm:p-6 font-serif bg-white min-h-full">
                     <h1 className="text-4xl font-bold mb-4 text-blue-800 underline">Welcome to Sanj's Web Portal</h1>
                     <p className="mb-4">This is my personal corner of the World Wide Web.</p>
                     <div className="border-t border-b border-gray-300 py-4 my-4">
@@ -520,7 +520,7 @@ You are chatting on "LoveLink", a 1990s dating website.
                         <ul className="list-disc pl-5">
                             {blogPosts.map(post => (
                                 <li key={post.id} className="mb-1">
-                                    <a href="#" onClick={(e) => { e.preventDefault(); navigate(post.id.toString()); }} className="text-blue-600 underline hover:text-red-600">
+                                    <a href="#" onClick={(e) => { e.preventDefault(); navigate(post.id.toString()); }} className="touch-manipulation inline-block py-2 text-blue-600 underline hover:text-red-600">
                                         {post.title}
                                     </a>
                                     <span className="text-gray-500 text-xs ml-2">({post.date})</span>
@@ -531,10 +531,10 @@ You are chatting on "LoveLink", a 1990s dating website.
                     <div>
                         <h2 className="text-2xl font-bold mb-2">Cool Links</h2>
                         <ul className="list-disc pl-5">
-                            <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('projects'); }} className="text-blue-600 underline font-bold">My Projects</a></li>
-                            <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('about'); }} className="text-blue-600 underline">About Me</a></li>
-                            <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('lovelink'); }} className="text-blue-600 underline">LoveLink (Dating)</a></li>
-                            <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('mail'); }} className="text-blue-600 underline">Contact Me</a></li>
+                            <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('projects'); }} className="touch-manipulation inline-block py-2 text-blue-600 underline font-bold">My Projects</a></li>
+                            <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('about'); }} className="touch-manipulation inline-block py-2 text-blue-600 underline">About Me</a></li>
+                            <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('lovelink'); }} className="touch-manipulation inline-block py-2 text-blue-600 underline">LoveLink (Dating)</a></li>
+                            <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('mail'); }} className="touch-manipulation inline-block py-2 text-blue-600 underline">Contact Me</a></li>
                         </ul>
                     </div>
                 </div>
@@ -544,7 +544,7 @@ You are chatting on "LoveLink", a 1990s dating website.
         // Handle About
         if (currentPath === 'about') {
             return (
-                <div className="p-6 font-serif bg-white min-h-full">
+                <div className="p-4 sm:p-6 font-serif bg-white min-h-full">
                     <h1 className="text-3xl font-bold mb-4">About Me</h1>
                     <div className="whitespace-pre-wrap font-sans">{aboutContent}</div>
                 </div>
@@ -557,8 +557,8 @@ You are chatting on "LoveLink", a 1990s dating website.
             const post = blogPosts.find(p => p.id === postId);
             if (post) {
                 return (
-                    <div className="p-6 font-serif bg-white min-h-full">
-                        <button onClick={() => navigate('home')} className="text-blue-600 underline mb-4">&lt; Back to Home</button>
+                    <div className="p-4 sm:p-6 font-serif bg-white min-h-full">
+                        <button onClick={() => navigate('home')} className="touch-manipulation min-h-11 px-3 text-blue-600 underline mb-4">&lt; Back to Home</button>
                         <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
                         <div className="text-gray-500 text-sm mb-6">{post.date}</div>
                         <div className="whitespace-pre-wrap font-sans leading-relaxed">{post.content}</div>
@@ -571,7 +571,7 @@ You are chatting on "LoveLink", a 1990s dating website.
             <div className="flex flex-col items-center justify-center h-full bg-gray-200">
                 <h1 className="text-4xl text-gray-500 font-bold mb-2">404</h1>
                 <p>Page Not Found</p>
-                <button onClick={() => navigate('home')} className="mt-4 text-blue-600 underline">Go Home</button>
+                <button onClick={() => navigate('home')} className="touch-manipulation min-h-11 px-3 mt-4 text-blue-600 underline">Go Home</button>
             </div>
         );
     };
@@ -592,7 +592,7 @@ You are chatting on "LoveLink", a 1990s dating website.
         >
             <div className="flex flex-col h-full bg-[#c0c0c0] border-t border-l border-white border-b border-r border-gray-600">
                 {/* Menu Bar */}
-                <div className="flex gap-4 px-2 py-1 text-sm border-b border-gray-400">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 px-2 py-2 text-sm border-b border-gray-400">
                     <span className="underline cursor-pointer">F</span>ile
                     <span className="underline cursor-pointer">E</span>dit
                     <span className="underline cursor-pointer">V</span>iew
@@ -602,20 +602,20 @@ You are chatting on "LoveLink", a 1990s dating website.
                 </div>
 
                 {/* Toolbar */}
-                <div className="flex gap-1 p-1 border-b border-white mb-1">
-                    <button onClick={() => navigate('home')} className="win95-btn px-2 py-1 text-xs font-bold flex flex-col items-center min-w-[50px]">
+                <div className="flex flex-wrap gap-1 p-1 border-b border-white mb-1">
+                    <button onClick={() => navigate('home')} className="touch-manipulation win95-btn px-2 py-2 text-xs font-bold flex flex-col items-center min-w-[58px]">
                         <span className="text-lg">🏠</span>
                         Home
                     </button>
-                    <button onClick={() => navigate('projects')} className="win95-btn px-2 py-1 text-xs font-bold flex flex-col items-center min-w-[50px]">
+                    <button onClick={() => navigate('projects')} className="touch-manipulation win95-btn px-2 py-2 text-xs font-bold flex flex-col items-center min-w-[58px]">
                         <span className="text-lg">📁</span>
                         Projects
                     </button>
-                    <button onClick={() => navigate('mail')} className="win95-btn px-2 py-1 text-xs font-bold flex flex-col items-center min-w-[50px]">
+                    <button onClick={() => navigate('mail')} className="touch-manipulation win95-btn px-2 py-2 text-xs font-bold flex flex-col items-center min-w-[58px]">
                         <span className="text-lg">✉️</span>
                         Mail
                     </button>
-                    <button onClick={() => navigate('lovelink')} className="win95-btn px-2 py-1 text-xs font-bold flex flex-col items-center min-w-[50px]">
+                    <button onClick={() => navigate('lovelink')} className="touch-manipulation win95-btn px-2 py-2 text-xs font-bold flex flex-col items-center min-w-[58px]">
                         <span className="text-lg">❤️</span>
                         Dating
                     </button>
@@ -624,11 +624,11 @@ You are chatting on "LoveLink", a 1990s dating website.
                 </div>
 
                 {/* Address Bar */}
-                <div className="flex items-center gap-2 px-2 py-1 border-b border-gray-400">
+                <div className="flex items-center gap-2 px-2 py-2 border-b border-gray-400">
                     <span className="text-xs font-bold">Location:</span>
                     <form onSubmit={handleGo} className="flex-1 flex">
                         <input
-                            className="flex-1 border-2 border-gray-500 border-inset px-1 text-sm font-mono"
+                            className="flex-1 min-h-11 border-2 border-gray-500 border-inset px-2 text-sm font-mono touch-manipulation"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                         />
