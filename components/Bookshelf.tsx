@@ -133,18 +133,18 @@ const Bookshelf: React.FC<BookshelfProps> = ({ onClose, onFocus, zIndex, isFocus
                 </div>
 
                 {/* Toolbar - Dark Gray & Pink */}
-                <div className="bg-[#111] border-b border-[#ff1fad]/30 p-1 flex gap-2 text-xs">
+                <div className="bg-[#111] border-b border-[#ff1fad]/30 p-1 flex flex-wrap gap-2 text-xs">
                     <button
                         onClick={generateCovers}
                         disabled={isGenerating}
-                        className={`px-2 py-1 border font-bold flex items-center gap-2 transition-all ${isGenerating
+                        className={`touch-manipulation min-h-11 px-3 py-2 border font-bold flex items-center gap-2 transition-all ${isGenerating
                             ? 'bg-[#333] border-gray-600 text-gray-500 cursor-wait'
                             : 'bg-black border-[#ff1fad] text-[#ff1fad] hover:bg-[#ff1fad] hover:text-black hover:shadow-[0_0_8px_#ff1fad]'
                             }`}
                     >
                         <span>{isGenerating ? 'PROCESSING...' : 'EXECUTE: ART_GEN'}</span>
                     </button>
-                    <div className="border border-[#ff1fad] bg-black text-[#ff1fad] px-2 py-1 min-w-[100px] placeholder-[#ff1fad]/30 font-mono">Search...</div>
+                    <div className="border border-[#ff1fad] bg-black text-[#ff1fad] px-2 py-2 min-w-[100px] placeholder-[#ff1fad]/30 font-mono">Search...</div>
                     <div className="flex-1"></div>
                     <span className="text-[#ff1fad] self-center">{books.length} ITEMS</span>
                 </div>
@@ -156,7 +156,7 @@ const Bookshelf: React.FC<BookshelfProps> = ({ onClose, onFocus, zIndex, isFocus
                             <div
                                 key={book.id}
                                 onClick={() => setSelectedBook(book)}
-                                className="group cursor-pointer relative flex flex-col items-center gap-2"
+                                className="group touch-manipulation cursor-pointer relative flex flex-col items-center gap-2"
                             >
                                 {/* Book Artifact */}
                                 <div className="relative w-full aspect-[2/3] transition-transform duration-200 group-hover:-translate-y-2">
@@ -220,21 +220,21 @@ const Bookshelf: React.FC<BookshelfProps> = ({ onClose, onFocus, zIndex, isFocus
 
                 {/* Detail Modal */}
                 {selectedBook && (
-                    <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-8 backdrop-blur-[2px]" onClick={() => setSelectedBook(null)}>
+                    <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-3 sm:p-8 backdrop-blur-[2px]" onClick={() => setSelectedBook(null)}>
                         <div
-                            className="bg-black w-full max-w-2xl h-[400px] shadow-[0_0_30px_rgba(255,31,173,0.2)] border-2 border-[#ff1fad] flex flex-col relative"
+                            className="bg-black w-full max-w-2xl max-h-[90vh] h-auto shadow-[0_0_30px_rgba(255,31,173,0.2)] border-2 border-[#ff1fad] flex flex-col relative overflow-hidden"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Modal Header */}
-                            <div className="bg-[#ff1fad] text-black px-2 py-1 flex justify-between items-center border-b border-black">
+                            <div className="bg-[#ff1fad] text-black px-2 py-2 flex justify-between items-center border-b border-black">
                                 <span className="font-bold text-sm tracking-widest">PROPERTIES: {selectedBook.title.toUpperCase()}</span>
-                                <button onClick={() => setSelectedBook(null)} className="border border-black px-2 hover:bg-black hover:text-[#ff1fad] font-bold transition-colors">X</button>
+                                <button onClick={() => setSelectedBook(null)} className="touch-manipulation min-h-11 min-w-11 border border-black px-3 hover:bg-black hover:text-[#ff1fad] font-bold transition-colors">X</button>
                             </div>
 
                             {/* Content */}
-                            <div className="flex-1 p-4 flex gap-6 overflow-hidden">
+                            <div className="flex-1 p-4 flex flex-col md:flex-row gap-6 overflow-y-auto">
                                 {/* Left Column: Visuals */}
-                                <div className="w-1/3 flex flex-col gap-4">
+                                <div className="w-full md:w-1/3 flex flex-col gap-4">
                                     <div
                                         className="w-full aspect-[2/3] border-2 border-[#ff1fad] shadow-[0_0_10px_rgba(255,31,173,0.3)] relative bg-black overflow-hidden"
                                         style={{ backgroundColor: selectedBook.coverImage ? '#000' : selectedBook.color }}
@@ -283,10 +283,10 @@ const Bookshelf: React.FC<BookshelfProps> = ({ onClose, onFocus, zIndex, isFocus
                                     </div>
 
                                     <div className="mt-4 flex justify-end gap-2">
-                                        <button className="px-4 py-1 bg-black text-[#ff1fad] border border-[#ff1fad] text-xs hover:bg-[#ff1fad] hover:text-black transition-colors">EXPORT</button>
+                                        <button className="touch-manipulation min-h-11 px-4 py-2 bg-black text-[#ff1fad] border border-[#ff1fad] text-xs hover:bg-[#ff1fad] hover:text-black transition-colors">EXPORT</button>
                                         <button
                                             onClick={() => setSelectedBook(null)}
-                                            className="px-4 py-1 bg-[#ff1fad] text-black font-bold border border-[#ff1fad] text-xs hover:bg-[#d41b91]"
+                                            className="touch-manipulation min-h-11 px-4 py-2 bg-[#ff1fad] text-black font-bold border border-[#ff1fad] text-xs hover:bg-[#d41b91]"
                                         >
                                             CLOSE_VIEWER
                                         </button>

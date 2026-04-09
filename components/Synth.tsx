@@ -403,7 +403,7 @@ const Synth: React.FC<SynthProps> = ({ onClose, onFocus, zIndex, isFocused, isCl
         const isActive = activeNotes.includes(note);
         return (
             <div
-                className={`absolute border-b-black border-r-black select-none cursor-pointer flex items-end justify-center pb-2 transition-colors duration-75
+                className={`absolute border-b-black border-r-black select-none cursor-pointer flex items-end justify-center pb-2 transition-colors duration-75 touch-manipulation
                     ${isBlack
                         ? 'bg-black text-white h-[100px] w-[24px] z-10 border-l border-b-4 border-r-2 border-l-gray-600'
                         : 'bg-white text-black h-[160px] w-[36px] z-0 border-l border-b-4 border-r-2 border-l-gray-300'
@@ -412,11 +412,16 @@ const Synth: React.FC<SynthProps> = ({ onClose, onFocus, zIndex, isFocused, isCl
                 `}
                 style={{
                     left: leftOffset !== undefined ? leftOffset : 'auto',
-                    boxShadow: isActive ? 'inset 0 0 10px rgba(0,0,0,0.5)' : 'none'
+                    boxShadow: isActive ? 'inset 0 0 10px rgba(0,0,0,0.5)' : 'none',
+                    touchAction: 'none'
                 }}
-                onMouseDown={() => playNote(note)}
-                onMouseUp={() => stopNote(note)}
-                onMouseLeave={() => stopNote(note)}
+                onPointerDown={(e) => {
+                    e.preventDefault();
+                    playNote(note);
+                }}
+                onPointerUp={() => stopNote(note)}
+                onPointerLeave={() => stopNote(note)}
+                onPointerCancel={() => stopNote(note)}
             >
                 <span className="text-[9px] opacity-50 pointer-events-none mb-1">{note}</span>
             </div>
@@ -429,16 +434,16 @@ const Synth: React.FC<SynthProps> = ({ onClose, onFocus, zIndex, isFocused, isCl
                 <input
                     type="range" min={min} max={max} step={(max - min) / 100} value={value}
                     onChange={(e) => onChange(parseFloat(e.target.value))}
-                    className="w-12 h-24 appearance-none bg-gray-700 border-2 border-gray-600 rounded-full"
-                    style={{ writingMode: 'vertical-lr', direction: 'rtl' } as any}
-                />
+                className="touch-manipulation w-12 h-24 appearance-none bg-gray-700 border-2 border-gray-600 rounded-full"
+                style={{ writingMode: 'vertical-lr', direction: 'rtl' } as any}
+            />
                 <span className="text-[10px] font-bold text-gray-800 uppercase">{label}</span>
             </div>
         );
     };
 
     const renderSequencer = () => (
-        <div className="bg-[#a0a0a0] p-1 border-2 border-white border-b-gray-600 border-r-gray-600 inset-shadow">
+        <div className="bg-[#a0a0a0] p-1 border-2 border-white border-b-gray-600 border-r-gray-600 inset-shadow overflow-x-auto">
             <div className="grid grid-cols-[60px_repeat(16,1fr)] gap-1 mb-1">
                 <div className="text-[10px] font-bold self-end text-right pr-2">STEP</div>
                 {Array(16).fill(0).map((_, i) => (
@@ -506,18 +511,18 @@ const Synth: React.FC<SynthProps> = ({ onClose, onFocus, zIndex, isFocused, isCl
             initialY={80}
             icon={<div className="w-full h-full bg-orange-600 text-white flex items-center justify-center font-bold text-xs">♪</div>}
         >
-            <div className="bg-[#c0c0c0] p-2 flex flex-col gap-3 min-w-[680px] overflow-x-auto">
+            <div className="bg-[#c0c0c0] p-2 flex flex-col gap-3 w-full min-w-0 overflow-x-hidden">
 
                 {/* Top Rack: Visualizer & Transport */}
-                <div className="flex gap-2 h-24">
+                <div className="flex flex-col lg:flex-row gap-2 lg:h-24">
                     {/* Visualizer */}
-                    <div className="bg-black border-2 border-gray-600 flex-1 relative rounded-sm overflow-hidden">
+                    <div className="bg-black border-2 border-gray-600 flex-1 relative rounded-sm overflow-hidden min-h-[120px] lg:min-h-0">
                         <canvas ref={canvasRef} width={400} height={96} className="w-full h-full" />
                         <div className="absolute top-1 left-1 text-[10px] text-green-500 font-mono">OSCILLOSCOPE</div>
                     </div>
 
                     {/* Transport */}
-                    <div className="w-48 bg-[#a0a0a0] border-2 border-white border-b-gray-600 border-r-gray-600 p-2 flex flex-col justify-between">
+                    <div className="w-full lg:w-48 bg-[#a0a0a0] border-2 border-white border-b-gray-600 border-r-gray-600 p-2 flex flex-col justify-between">
                         <div className="flex items-center justify-between bg-black px-2 py-1 border border-gray-600 mb-2">
                             <span className="text-red-500 font-mono text-xl font-bold">{bpm}</span>
                             <span className="text-gray-400 text-[10px]">BPM</span>
@@ -529,13 +534,13 @@ const Synth: React.FC<SynthProps> = ({ onClose, onFocus, zIndex, isFocused, isCl
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setIsPlaying(!isPlaying)}
-                                className={`flex-1 py-1 font-bold text-xs border-2 ${isPlaying ? 'bg-green-300 border-inset border-gray-600' : 'bg-gray-300 border-outset border-white'}`}
+                                className={`touch-manipulation flex-1 min-h-11 py-2 font-bold text-xs border-2 ${isPlaying ? 'bg-green-300 border-inset border-gray-600' : 'bg-gray-300 border-outset border-white'}`}
                             >
                                 {isPlaying ? 'STOP' : 'PLAY'}
                             </button>
                             <button
                                 onClick={() => { setSequencerGrid(Array(4).fill(null).map(() => Array(16).fill(false))); }}
-                                className="flex-1 py-1 font-bold text-xs bg-gray-300 border-2 border-white border-b-gray-600 border-r-gray-600 active:border-t-black active:border-l-black"
+                                className="touch-manipulation flex-1 min-h-11 py-2 font-bold text-xs bg-gray-300 border-2 border-white border-b-gray-600 border-r-gray-600 active:border-t-black active:border-l-black"
                             >
                                 CLEAR
                             </button>
@@ -547,16 +552,18 @@ const Synth: React.FC<SynthProps> = ({ onClose, onFocus, zIndex, isFocused, isCl
                 {renderSequencer()}
 
                 {/* Bottom Rack: Synth Controls & Keyboard */}
-                <div className="flex gap-2">
-                    {renderPiano()}
+                <div className="flex flex-col xl:flex-row gap-2">
+                    <div className="w-full xl:w-auto overflow-x-auto">
+                        {renderPiano()}
+                    </div>
 
-                    <div className="flex-1 bg-[#d0d0d0] border-2 border-white border-b-gray-600 border-r-gray-600 p-2 grid grid-cols-4 gap-2">
-                        <div className="col-span-4 text-[10px] font-bold border-b border-gray-500 mb-1">SYNTHESIZER CONTROL</div>
+                    <div className="flex-1 bg-[#d0d0d0] border-2 border-white border-b-gray-600 border-r-gray-600 p-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div className="col-span-2 sm:col-span-4 text-[10px] font-bold border-b border-gray-500 mb-1">SYNTHESIZER CONTROL</div>
 
                         <div className="flex flex-col gap-2 border-r border-gray-400 pr-2">
                             <label className="text-[9px] font-bold">WAVEFORM</label>
                             <select
-                                className="text-xs border border-gray-500"
+                                className="touch-manipulation min-h-11 text-xs border border-gray-500"
                                 value={params.waveType} onChange={(e) => setParams(p => ({ ...p, waveType: e.target.value as any }))}
                             >
                                 <option value="sawtooth">Saw</option>
@@ -570,7 +577,7 @@ const Synth: React.FC<SynthProps> = ({ onClose, onFocus, zIndex, isFocused, isCl
                         <Knob label="Release" value={params.release} min={0.1} max={2} onChange={(v) => setParams(p => ({ ...p, release: v }))} />
                         <Knob label="Filter" value={params.cutoff} min={100} max={5000} onChange={(v) => setParams(p => ({ ...p, cutoff: v }))} />
 
-                        <div className="col-span-4 text-[10px] font-bold border-b border-gray-500 mb-1 mt-1">EFFECTS</div>
+                        <div className="col-span-2 sm:col-span-4 text-[10px] font-bold border-b border-gray-500 mb-1 mt-1">EFFECTS</div>
 
                         <Knob label="Delay Time" value={params.delayTime} min={0.05} max={1.0} onChange={(v) => setParams(p => ({ ...p, delayTime: v }))} />
                         <Knob label="Delay Mix" value={params.delayMix} min={0} max={0.8} onChange={(v) => setParams(p => ({ ...p, delayMix: v }))} />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Terminal from './components/Terminal';
 import PlatformerGame from './components/PlatformerGame';
 import Browser from './components/Browser';
@@ -13,6 +13,7 @@ const App: React.FC = () => {
     const [focusedApp, setFocusedApp] = useState<string | null>('terminal');
     const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    const [isMobile, setIsMobile] = useState(false);
 
     // Shared State
     const [blogPosts, setBlogPosts] = useState<BlogPost[]>(BLOG_POSTS);
@@ -21,11 +22,24 @@ const App: React.FC = () => {
     const [books, setBooks] = useState<Book[]>(BOOKS);
 
     // Clock
-    React.useEffect(() => {
+    useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
         }, 1000);
         return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        const mobileQuery = window.matchMedia('(hover: none), (pointer: coarse), (max-width: 767px)');
+
+        const updateIsMobile = () => {
+            setIsMobile(mobileQuery.matches);
+        };
+
+        updateIsMobile();
+        mobileQuery.addEventListener('change', updateIsMobile);
+
+        return () => mobileQuery.removeEventListener('change', updateIsMobile);
     }, []);
 
     const toggleApp = (appId: string) => {
@@ -83,7 +97,7 @@ const App: React.FC = () => {
     };
 
     return (
-        <div className="relative w-screen h-screen overflow-hidden bg-[#008080] select-none font-sans cursor-default">
+        <div className="desktop-shell relative w-screen h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#008080] select-none font-sans cursor-default touch-manipulation">
             <style>{`
         @keyframes wave {
             0% { transform: translateY(0); color: #ff1fad; }
@@ -118,54 +132,79 @@ const App: React.FC = () => {
         .writing-vertical-rl {
             writing-mode: vertical-rl;
         }
+        .desktop-shell {
+            -webkit-tap-highlight-color: transparent;
+        }
+        @media (hover: none), (pointer: coarse), (max-width: 767px) {
+            .desktop-shell .desktop-icon-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                width: calc(100% - 2rem);
+                max-width: 18rem;
+            }
+            .desktop-shell .desktop-icon {
+                min-height: 5.5rem;
+            }
+            .desktop-shell .desktop-icon-label {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+            .desktop-shell .taskbar {
+                padding-bottom: calc(env(safe-area-inset-bottom) + 0.25rem);
+            }
+            .desktop-shell .taskbar-button,
+            .desktop-shell .start-menu-item,
+            .desktop-shell .window-action-button {
+                min-height: 44px;
+            }
+        }
       `}</style>
 
             {/* Desktop Icons - Responsive Grid */}
-            <div className="absolute top-4 left-4 right-4 md:right-auto md:w-20 grid grid-cols-3 sm:grid-cols-4 md:flex md:flex-col gap-4 md:gap-6 text-white text-xs text-center font-ms-sans z-0">
-                <div className="group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform" onClick={() => toggleApp('terminal')}>
+            <div className="desktop-icon-grid absolute top-4 left-4 right-4 md:right-auto md:w-20 grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-col gap-4 md:gap-6 text-white text-xs text-center font-ms-sans z-0">
+                <div className="desktop-icon group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform touch-manipulation" onClick={() => toggleApp('terminal')}>
                     <div className="w-12 h-12 md:w-8 md:h-8 bg-black border-2 border-gray-400 flex items-center justify-center text-green-400 font-bold text-sm md:text-xs">
                         &gt;_
                     </div>
-                    <span className="bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Terminal</span>
+                    <span className="desktop-icon-label bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Terminal</span>
                 </div>
 
-                <div className="group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform" onClick={() => openBrowserTo('home')}>
+                <div className="desktop-icon group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform touch-manipulation" onClick={() => openBrowserTo('home')}>
                     <div className="w-12 h-12 md:w-8 md:h-8 bg-teal-700 border-2 border-white flex items-center justify-center font-serif font-bold text-white text-lg md:text-base">
                         N
                     </div>
-                    <span className="bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Internet</span>
+                    <span className="desktop-icon-label bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Internet</span>
                 </div>
 
-                <div className="group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform" onClick={() => openBrowserTo('projects')}>
+                <div className="desktop-icon group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform touch-manipulation" onClick={() => openBrowserTo('projects')}>
                     <div className="w-12 h-12 md:w-8 md:h-8 bg-yellow-200 border-2 border-yellow-600 flex items-center justify-center shadow-md">
                         <div className="w-8 h-5 md:w-6 md:h-4 bg-yellow-400 border border-yellow-600 relative top-1">
                             <div className="absolute -top-1 left-0 w-4 md:w-3 h-1 bg-yellow-400 border-t border-l border-r border-yellow-600"></div>
                         </div>
                     </div>
-                    <span className="bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Projects</span>
+                    <span className="desktop-icon-label bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Projects</span>
                 </div>
 
-                <div className="group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform" onClick={() => toggleApp('library')}>
+                <div className="desktop-icon group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform touch-manipulation" onClick={() => toggleApp('library')}>
                     <div className="w-12 h-12 md:w-8 md:h-8 bg-amber-800 border-2 border-amber-950 flex flex-col items-center justify-center shadow-md gap-[2px] md:gap-[1px] px-1.5 md:px-1">
                         <div className="w-full h-1.5 md:h-1 bg-white/50"></div>
                         <div className="w-full h-1.5 md:h-1 bg-white/50"></div>
                         <div className="w-full h-1.5 md:h-1 bg-white/50"></div>
                     </div>
-                    <span className="bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Library</span>
+                    <span className="desktop-icon-label bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Library</span>
                 </div>
 
-                <div className="group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform" onClick={() => toggleApp('game')}>
+                <div className="desktop-icon group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform touch-manipulation" onClick={() => toggleApp('game')}>
                     <div className="w-12 h-12 md:w-8 md:h-8 bg-yellow-400 border-2 border-red-500 flex items-center justify-center">
                         <div className="w-5 h-5 md:w-4 md:h-4 bg-blue-500" />
                     </div>
-                    <span className="bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Game.exe</span>
+                    <span className="desktop-icon-label bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Game.exe</span>
                 </div>
 
-                <div className="group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform" onClick={() => toggleApp('synth')}>
+                <div className="desktop-icon group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform touch-manipulation" onClick={() => toggleApp('synth')}>
                     <div className="w-12 h-12 md:w-8 md:h-8 bg-gray-300 border-2 border-black flex items-center justify-center text-black font-bold text-lg md:text-base">
                         ♪
                     </div>
-                    <span className="bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Synth</span>
+                    <span className="desktop-icon-label bg-[#008080] group-hover:bg-[#000080] px-1 text-[10px] md:text-xs">Synth</span>
                 </div>
             </div>
 
@@ -230,7 +269,7 @@ const App: React.FC = () => {
 
             {/* Start Menu */}
             {isStartMenuOpen && (
-                <div className="absolute bottom-10 left-1 w-48 bg-[#c0c0c0] win95-panel border-2 border-white border-b-black border-r-black z-[100] flex shadow-xl">
+                <div className={`absolute bottom-12 left-2 right-2 sm:left-1 sm:right-auto sm:w-48 bg-[#c0c0c0] win95-panel border-2 border-white border-b-black border-r-black z-[100] flex shadow-xl ${isMobile ? 'max-w-none' : ''}`}>
                     {/* Sidebar */}
                     <div className="bg-[#000080] w-8 flex flex-col items-center justify-end pb-2">
                         <div className="sidebar-text text-white font-bold text-lg tracking-widest">
@@ -240,29 +279,29 @@ const App: React.FC = () => {
 
                     {/* Menu Items */}
                     <div className="flex-1 flex flex-col py-1">
-                        <div className="hover:bg-[#000080] hover:text-white px-2 py-2 cursor-pointer flex items-center gap-2" onClick={() => toggleApp('terminal')}>
+                        <div className="start-menu-item hover:bg-[#000080] hover:text-white px-3 py-3 cursor-pointer flex items-center gap-2 touch-manipulation" onClick={() => toggleApp('terminal')}>
                             <div className="w-6 h-6 bg-black flex items-center justify-center text-[8px] text-green-500 border border-gray-400">&gt;_</div>
                             <div><span className="underline">M</span>S-DOS Prompt</div>
                         </div>
-                        <div className="hover:bg-[#000080] hover:text-white px-2 py-2 cursor-pointer flex items-center gap-2" onClick={() => openBrowserTo('home')}>
+                        <div className="start-menu-item hover:bg-[#000080] hover:text-white px-3 py-3 cursor-pointer flex items-center gap-2 touch-manipulation" onClick={() => openBrowserTo('home')}>
                             <div className="w-6 h-6 bg-teal-700 flex items-center justify-center text-[8px] text-white font-serif font-bold">N</div>
                             <div><span className="underline">N</span>etscape</div>
                         </div>
-                        <div className="hover:bg-[#000080] hover:text-white px-2 py-2 cursor-pointer flex items-center gap-2" onClick={() => openBrowserTo('projects')}>
+                        <div className="start-menu-item hover:bg-[#000080] hover:text-white px-3 py-3 cursor-pointer flex items-center gap-2 touch-manipulation" onClick={() => openBrowserTo('projects')}>
                             <div className="w-6 h-6 bg-yellow-200 border border-yellow-600 flex items-center justify-center">
                                 <div className="w-3 h-3 bg-yellow-400 border border-yellow-600"></div>
                             </div>
                             <div><span className="underline">P</span>rojects</div>
                         </div>
-                        <div className="hover:bg-[#000080] hover:text-white px-2 py-2 cursor-pointer flex items-center gap-2" onClick={() => toggleApp('library')}>
+                        <div className="start-menu-item hover:bg-[#000080] hover:text-white px-3 py-3 cursor-pointer flex items-center gap-2 touch-manipulation" onClick={() => toggleApp('library')}>
                             <div className="w-6 h-6 bg-amber-800 border border-black flex items-center justify-center text-[8px] text-white">📚</div>
                             <div><span className="underline">L</span>ibrary</div>
                         </div>
-                        <div className="hover:bg-[#000080] hover:text-white px-2 py-2 cursor-pointer flex items-center gap-2" onClick={() => toggleApp('game')}>
+                        <div className="start-menu-item hover:bg-[#000080] hover:text-white px-3 py-3 cursor-pointer flex items-center gap-2 touch-manipulation" onClick={() => toggleApp('game')}>
                             <div className="w-6 h-6 bg-yellow-400 border border-black"></div>
                             <div><span className="underline">G</span>ames</div>
                         </div>
-                        <div className="hover:bg-[#000080] hover:text-white px-2 py-2 cursor-pointer flex items-center gap-2" onClick={() => toggleApp('synth')}>
+                        <div className="start-menu-item hover:bg-[#000080] hover:text-white px-3 py-3 cursor-pointer flex items-center gap-2 touch-manipulation" onClick={() => toggleApp('synth')}>
                             <div className="w-6 h-6 bg-gray-300 border border-black flex items-center justify-center text-xs font-bold">♪</div>
                             <div><span className="underline">S</span>ynthesizer</div>
                         </div>
@@ -276,10 +315,10 @@ const App: React.FC = () => {
             )}
 
             {/* Taskbar - Responsive */}
-            <div className="absolute bottom-0 left-0 right-0 h-12 md:h-10 bg-[#c0c0c0] border-t-2 border-white flex items-center p-1 gap-1 z-[90]">
+            <div className="taskbar absolute bottom-0 left-0 right-0 h-12 md:h-10 bg-[#c0c0c0] border-t-2 border-white flex items-center p-1 gap-1 z-[90] touch-manipulation">
                 {/* Start Button */}
                 <button
-                    className={`win95-btn px-3 md:px-2 h-full gap-1.5 md:gap-1 font-bold text-sm ${isStartMenuOpen ? 'active' : ''}`}
+                    className={`taskbar-button win95-btn px-3 md:px-2 h-full gap-1.5 md:gap-1 font-bold text-sm ${isStartMenuOpen ? 'active' : ''}`}
                     onClick={() => setIsStartMenuOpen(!isStartMenuOpen)}
                 >
                     <div className="w-5 h-5 md:w-4 md:h-4 bg-black skew-x-12 relative overflow-hidden">
@@ -299,7 +338,7 @@ const App: React.FC = () => {
                         <button
                             key={app}
                             onClick={() => focusApp(app)}
-                            className={`win95-btn px-2 h-full min-w-[44px] sm:min-w-[80px] md:min-w-[120px] max-w-[150px] justify-center sm:justify-start gap-1 sm:gap-2 text-sm truncate ${focusedApp === app ? 'active font-bold bg-[#e0e0e0]' : ''}`}
+                            className={`taskbar-button win95-btn px-2 h-full min-w-[44px] sm:min-w-[80px] md:min-w-[120px] max-w-[150px] justify-center sm:justify-start gap-1 sm:gap-2 text-sm truncate ${focusedApp === app ? 'active font-bold bg-[#e0e0e0]' : ''}`}
                         >
                             {app === 'terminal' && <span className="font-mono text-xs">&gt;_</span>}
                             {app === 'game' && <div className="w-4 h-4 sm:w-3 sm:h-3 bg-yellow-400 border border-black" />}
@@ -322,7 +361,7 @@ const App: React.FC = () => {
                 <div className="w-[2px] h-full border-l border-gray-500 border-r border-white mx-1 hidden sm:block"></div>
 
                 {/* System Tray */}
-                <div className="win95-panel h-full px-2 sm:px-3 flex items-center justify-center text-xs sm:text-sm inset-shadow bg-[#c0c0c0] border-2 border-gray-500 border-b-white border-r-white">
+                <div className="taskbar-button win95-panel h-full px-2 sm:px-3 flex items-center justify-center text-xs sm:text-sm inset-shadow bg-[#c0c0c0] border-2 border-gray-500 border-b-white border-r-white">
                     <div className="mr-1 sm:mr-2 hidden sm:block">🔊</div>
                     {currentTime}
                 </div>
