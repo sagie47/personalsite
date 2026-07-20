@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Window from './Window';
 import { BlogPost } from '../types';
 import { PROJECTS } from '../constants';
-import { GoogleGenAI } from "@google/genai";
+import { generateGeminiText, ChatContent } from '../services/gemini';
 
 interface BrowserProps {
     onClose: () => void;
@@ -70,7 +70,7 @@ const Browser: React.FC<BrowserProps> = ({ onClose, onFocus, zIndex, isFocused, 
 
     // --- Mail Client State ---
     const [mailForm, setMailForm] = useState({ from: '', subject: '', message: '' });
-    const [mailStatus, setMailStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+    const [mailStatus, setMailStatus] = useState<'idle' | 'opened'>('idle');
 
     // --- Dating Site State ---
     const [datingProfiles, setDatingProfiles] = useState<DatingProfile[]>([]);
@@ -153,13 +153,12 @@ const Browser: React.FC<BrowserProps> = ({ onClose, onFocus, zIndex, isFocused, 
     };
 
     // --- Mail Client Logic ---
-    const handleSendMail = (e: React.FormEvent) => {
+    const handleSendMail = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-        setMailStatus('sending');
-        setTimeout(() => {
-            setMailStatus('sent');
-            setMailForm({ from: '', subject: '', message: '' });
-        }, 1500);
+        const subject = encodeURIComponent(mailForm.subject || 'Message from personalsite');
+        const body = encodeURIComponent(`${mailForm.message}\n\nReply to: ${mailForm.from || 'unknown sender'}`);
+        window.location.href = `mailto:sanj@sanj.com?subject=${subject}&body=${body}`;
+        setMailStatus('opened');
     };
 
     // --- Dating Site Logic ---
@@ -202,11 +201,8 @@ const Browser: React.FC<BrowserProps> = ({ onClose, onFocus, zIndex, isFocused, 
         }, 10);
 
         try {
-            // Initialize Gemini AI
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
             const currentHistory = chats[profileId] || [];
-            const contents = currentHistory.map(msg => ({
+            const contents: ChatContent[] = currentHistory.map(msg => ({
                 role: msg.sender === 'user' ? 'user' : 'model',
                 parts: [{ text: msg.text }]
             }));
@@ -222,13 +218,10 @@ You are chatting on "LoveLink", a 1990s dating website.
 - Keep responses short, like a chat message.
 - Do NOT admit to being an AI. You are a human using a slow computer.`;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-pro-preview',
-                contents: contents,
-                config: {
-                    systemInstruction: systemInstruction,
-                    maxOutputTokens: 150,
-                }
+            const response = await generateGeminiText({
+                contents,
+                systemInstruction,
+                maxOutputTokens: 150,
             });
 
             const responseText = response.text || "...";
@@ -295,11 +288,11 @@ You are chatting on "LoveLink", a 1990s dating website.
                     </button>
                 </div>
 
-                {mailStatus === 'sent' ? (
+                {mailStatus === 'opened' ? (
                     <div className="flex-1 flex flex-col items-center justify-center bg-white border-2 border-gray-500 m-2 inset-shadow">
                         <div className="text-4xl mb-4">📨</div>
-                        <h2 className="text-xl font-bold text-green-700 mb-2">Message Sent!</h2>
-                        <p className="text-gray-600 mb-4">Your email has been queued for delivery.</p>
+                        <h2 className="text-xl font-bold text-green-700 mb-2">Mail Client Opened</h2>
+                        <p className="text-gray-600 mb-4">Finish sending the message in your email application.</p>
                         <button
                             onClick={() => setMailStatus('idle')}
                             className="px-4 py-1 bg-[#c0c0c0] border-2 border-white border-b-black border-r-black active:border-t-black active:border-l-black"
@@ -336,13 +329,12 @@ You are chatting on "LoveLink", a 1990s dating website.
                                 className="w-full h-full resize-none outline-none font-mono text-sm p-1"
                                 value={mailForm.message}
                                 onChange={e => setMailForm({ ...mailForm, message: e.target.value })}
-                                placeholder={mailStatus === 'sending' ? 'Sending...' : 'Type your message here...'}
-                                disabled={mailStatus === 'sending'}
+                                placeholder="Type your message here..."
                             />
                         </div>
 
                         <div className="h-4 border-t border-gray-400 text-[10px] text-gray-500 flex items-center">
-                            {mailStatus === 'sending' ? 'Connecting to SMTP server...' : 'Ready'}
+                            {mailStatus === 'opened' ? 'Mail client launched' : 'Ready'}
                         </div>
                     </div>
                 )}
