@@ -7,6 +7,15 @@ import Bookshelf from './components/Bookshelf';
 import { BLOG_POSTS, DEFAULT_ABOUT, BOOKS } from './constants';
 import { BlogPost, Book } from './types';
 
+const readStored = <T,>(key: string, fallback: T): T => {
+    try {
+        const value = window.localStorage.getItem(key);
+        return value ? JSON.parse(value) as T : fallback;
+    } catch {
+        return fallback;
+    }
+};
+
 const App: React.FC = () => {
     const [openApps, setOpenApps] = useState<string[]>(['terminal']);
     const [closingApps, setClosingApps] = useState<string[]>([]);
@@ -15,10 +24,26 @@ const App: React.FC = () => {
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
 
     // Shared State
-    const [blogPosts, setBlogPosts] = useState<BlogPost[]>(BLOG_POSTS);
-    const [aboutContent, setAboutContent] = useState<string>(DEFAULT_ABOUT);
+    const [blogPosts, setBlogPosts] = useState<BlogPost[]>(() => readStored('personalsite.blogPosts', BLOG_POSTS));
+    const [aboutContent, setAboutContent] = useState<string>(() => readStored('personalsite.aboutContent', DEFAULT_ABOUT));
     const [browserStartPath, setBrowserStartPath] = useState<string>('home');
     const [books, setBooks] = useState<Book[]>(BOOKS);
+
+    React.useEffect(() => {
+        try {
+            window.localStorage.setItem('personalsite.blogPosts', JSON.stringify(blogPosts));
+        } catch (error) {
+            console.warn('Could not persist blog posts:', error);
+        }
+    }, [blogPosts]);
+
+    React.useEffect(() => {
+        try {
+            window.localStorage.setItem('personalsite.aboutContent', JSON.stringify(aboutContent));
+        } catch (error) {
+            console.warn('Could not persist about content:', error);
+        }
+    }, [aboutContent]);
 
     // Clock
     React.useEffect(() => {

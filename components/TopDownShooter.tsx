@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Window from './Window';
-import { GoogleGenAI } from "@google/genai";
+import { generateGeminiImage } from '../services/gemini';
 
 interface ShooterProps {
   onClose: () => void;
@@ -327,20 +327,13 @@ const TopDownShooter: React.FC<ShooterProps> = ({ onClose, onFocus, zIndex, isFo
     if (isGenerating) return;
     setIsGenerating(true);
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const model = 'gemini-2.5-flash-image';
-
         const generateSprite = async (prompt: string): Promise<HTMLImageElement> => {
-            const response = await ai.models.generateContent({ model, contents: prompt });
-            let base64 = '';
-            for (const part of response.candidates?.[0]?.content?.parts || []) {
-                if (part.inlineData && part.inlineData.data) { base64 = part.inlineData.data; break; }
-            }
-            if (!base64) throw new Error("No image data");
+            const response = await generateGeminiImage(prompt, '1:1');
+            if (!response.imageData) throw new Error("No image data");
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => resolve(img);
-                img.src = `data:image/png;base64,${base64}`;
+                img.src = `data:image/png;base64,${response.imageData}`;
             });
         };
 

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Window from './Window';
 import { Book } from '../types';
-import { GoogleGenAI } from "@google/genai";
+import { generateGeminiImage } from '../services/gemini';
 
 interface BookshelfProps {
     onClose: () => void;
@@ -17,14 +17,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({ onClose, onFocus, zIndex, isFocus
     const [selectedBook, setSelectedBook] = useState<Book | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [generationProgress, setGenerationProgress] = useState(0);
-
-    // Auto-trigger generation if needed on mount
-    useEffect(() => {
-        const needsGeneration = books.some(b => b.coverPrompt && !b.coverImage);
-        if (needsGeneration && !isGenerating) {
-            generateCovers();
-        }
-    }, []);
 
     const renderRatingBar = (rating: number) => {
         return (
@@ -44,7 +36,6 @@ const Bookshelf: React.FC<BookshelfProps> = ({ onClose, onFocus, zIndex, isFocus
         setIsGenerating(true);
         setGenerationProgress(0);
 
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const booksToUpdate = books.filter(b => !b.coverImage && b.coverPrompt);
         let completed = 0;
 
@@ -52,35 +43,9 @@ const Bookshelf: React.FC<BookshelfProps> = ({ onClose, onFocus, zIndex, isFocus
             try {
                 if (!book.coverPrompt) continue;
 
-                // Using gemini-2.5-flash-image (Nano Banana) to generate image content
-                // Setting aspectRatio to 3:4 to better fit the book shape
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash-image',
-                    contents: {
-                        parts: [{ text: book.coverPrompt }]
-                    },
-                    config: {
-                        imageConfig: {
-                            aspectRatio: "3:4"
-                        }
-                    }
-                });
-
-                // Extract image part
-                let base64Image = null;
-                const candidates = response.candidates;
-                if (candidates && candidates.length > 0) {
-                    for (const part of candidates[0].content.parts) {
-                        if (part.inlineData && part.inlineData.data) {
-                            base64Image = part.inlineData.data;
-                            break;
-                        }
-                    }
-                }
-
-                if (base64Image) {
-                    const imageUrl = `data:image/png;base64,${base64Image}`;
-                    setBooks(prev => prev.map(b => b.id === book.id ? { ...b, coverImage: imageUrl } : b));
+                const response = await generateGeminiImage(book.coverPrompt, '3:4');
+                if (response.imageData) {
+                    setBooks(prev => prev.map(b => b.id === book.id ? { ...b, coverImage: `data:image/png;base64,${response.imageData}` } : b));
                 }
 
             } catch (error) {
